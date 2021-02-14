@@ -1,7 +1,8 @@
 import { Message } from "discord.js";
+import { IGuild } from "../schemas/Guild";
 import Client from "./Client";
 
-export type RunCallback = (client: Client, message: Message, args: string[]) => void;
+export type RunCallback = (client: Client, message: Message, args: string[], settings: IGuild | null) => void;
 export type ArgumentValidatorCallback = (argument: string | undefined) => boolean;
 
 export interface ICommand extends ICommandSettings {

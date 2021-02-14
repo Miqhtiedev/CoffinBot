@@ -4,6 +4,8 @@ import path from "path";
 import { toWordsOrdinal } from "number-to-words";
 import logger from "../utils/Logger";
 import { IArgument, ICommand, ICommandSettings } from "./Interfaces";
+import mongoose from "mongoose";
+import { IGuild } from "../schemas/Guild";
 
 export default class Client extends Discord.Client {
   prefix = "!";
@@ -11,9 +13,22 @@ export default class Client extends Discord.Client {
 
   constructor(options?: ClientOptions) {
     super(options);
+    console.log(`mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`);
+    
+    mongoose
+      .connect(`mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(() => {
+        logger.info("Connected to database!");
+      })
+      .catch((err) => {
+        logger.error("Failed to connect to database!\n" + err);
+      });
   }
 
-  executeCommand(command: ICommand, message: Message, args: string[]) {
+  executeCommand(command: ICommand, message: Message, args: string[], settings: IGuild | null) {
     if (command.guildOnly && !message.guild) return;
 
     try {
@@ -42,8 +57,9 @@ export default class Client extends Discord.Client {
       }
 
       // Run command
-      command.run(this, message, args);
-    } catch (e) { // Catch errors
+      command.run(this, message, args, settings);
+    } catch (e) {
+      // Catch errors
       message.channel.send(`An unexpected error occured while trying to run this command!`);
       logger.error(e);
     }
@@ -85,7 +101,7 @@ export default class Client extends Discord.Client {
               category: options.category,
               usage: options.usage,
               subcommands,
-              run: (client, message, args) => {
+              run: (client, message, args, settings) => {
                 const subcommandName = args.shift()?.toLowerCase();
                 let subcommand: ICommand | undefined = undefined;
 
@@ -96,7 +112,7 @@ export default class Client extends Discord.Client {
                 }
 
                 if (subcommand) {
-                  client.executeCommand(subcommand, message, args);
+                  client.executeCommand(subcommand, message, args, settings);
                 }
               },
             };
