@@ -32,6 +32,15 @@ export default class Client extends Discord.Client {
     if (command.guildOnly && !message.guild) return;
 
     try {
+
+      // Check permissions
+      if(command.permissions) {
+        if(!message.member?.hasPermission(command.permissions)) {
+          message.channel.send(`You are missing the required permissions to run this command! \`${command.permissions.toString()}\``);
+          return;
+        }
+      }
+
       // Check arguments
       if (command.args) {
         let msg = "You have to provide";

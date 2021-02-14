@@ -1,4 +1,4 @@
-import { Message } from "discord.js";
+import { Message, PermissionResolvable } from "discord.js";
 import { IGuild } from "../schemas/Guild";
 import Client from "./Client";
 
@@ -22,4 +22,5 @@ export interface ICommandSettings {
   usage: string;
   defaultSubcommand?: string;
   args?: (IArgument | null)[];
+  permissions?: PermissionResolvable;
 }
