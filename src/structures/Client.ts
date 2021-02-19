@@ -5,7 +5,7 @@ import { toWordsOrdinal } from "number-to-words";
 import logger from "../utils/Logger";
 import { IArgument, ICommand, ICommandSettings } from "./Interfaces";
 import mongoose from "mongoose";
-import { IGuild } from "../schemas/Guild";
+import Guild, { IGuild } from "../schemas/Guild";
 
 export default class Client extends Discord.Client {
   prefix = "!";
@@ -13,8 +13,6 @@ export default class Client extends Discord.Client {
 
   constructor(options?: ClientOptions) {
     super(options);
-    console.log(`mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`);
-    
     mongoose
       .connect(`mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}/${process.env.DATABASE_NAME}?retryWrites=true&w=majority`, {
         useNewUrlParser: true,
@@ -32,10 +30,9 @@ export default class Client extends Discord.Client {
     if (command.guildOnly && !message.guild) return;
 
     try {
-
       // Check permissions
-      if(command.permissions) {
-        if(!message.member?.hasPermission(command.permissions)) {
+      if (command.permissions) {
+        if (!message.member?.hasPermission(command.permissions)) {
           message.channel.send(`You are missing the required permissions to run this command! \`${command.permissions.toString()}\``);
           return;
         }
@@ -139,12 +136,24 @@ export default class Client extends Discord.Client {
 
     let e = 0;
     eventFiles.forEach((file: string) => {
-      e++;
-      const eventName = file.split(".")[0] as string;
-      const event: () => void = require(path.join(evnetsDir, file)).default;
-
-      this.on(eventName, event.bind(null, this));
+      const stats = fs.statSync(path.join(evnetsDir, file));
+      if(!stats.isDirectory()) {
+        e++;
+        const eventName = file.split(".")[0] as string;
+        const event: () => void = require(path.join(evnetsDir, file)).default;
+  
+        this.on(eventName, event.bind(null, this));
+      }
     });
     logger.info(`Done registering ${e} events!`);
+  }
+
+  async getSettings(id: string) {
+    let settings = await Guild.findOne({ guildID: id });
+    if (!settings) {
+      settings = new Guild({ guildID: id });
+      settings.save();
+    }
+    return settings;
   }
 }
