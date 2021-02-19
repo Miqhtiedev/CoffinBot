@@ -51,8 +51,9 @@ function getFormattedCommandsInCategory(name: string, client: Client): string {
   for (const cmd of client.commands) {
     if (cmd[1].category === name) msg += `\`${cmd[0]}\`, `;
   }
-  msg.slice(0, -1); // Remove extra comma
-  return msg.slice(0, -1);
+
+  msg = msg.substring(0, msg.length - 2); // Remove extra comma and space
+  return msg;
 }
 
 export default HelpCommand();
