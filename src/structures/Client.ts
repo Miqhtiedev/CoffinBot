@@ -10,6 +10,7 @@ import Guild, { IGuild } from "../schemas/Guild";
 export default class Client extends Discord.Client {
   prefix = "!";
   commands: Map<string, ICommand> = new Map();
+  version = "1.0.0";
 
   constructor(options?: ClientOptions) {
     super(options);
